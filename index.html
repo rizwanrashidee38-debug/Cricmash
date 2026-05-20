@@ -1,145 +1,206 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket Pro Simulator</title>
+    <title>Elite Cricket Career</title>
     <style>
-        :root { --primary: #2ecc71; --secondary: #27ae60; --dark: #2c3e50; --light: #ecf0f1; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--dark); color: var(--light); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        #game-container { background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 95%; max-width: 500px; text-align: center; }
+        :root { --accent: #f1c40f; --bg: #1a1a1a; --card: #2d2d2d; --text: #eee; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 10px; }
+        .container { max-width: 600px; margin: auto; }
+        .card { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .hidden { display: none; }
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
-        .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
-        .tile { height: 100px; background: var(--primary); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; transition: 0.2s; border-bottom: 5px solid var(--secondary); }
-        .tile:hover { transform: translateY(-3px); filter: brightness(1.1); }
-        .tile:active { transform: translateY(2px); border-bottom: 0; }
-        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
-        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
-        #log { font-style: italic; color: #bdc3c7; height: 40px; }
+        
+        /* Stats & UI */
+        .stats-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.8rem; text-align: center; }
+        .match-header { font-size: 1.2rem; font-weight: bold; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px; color: var(--accent); }
+        
+        /* Gameplay */
+        .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .tile { height: 70px; background: #27ae60; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: 0.2s; }
+        .tile:hover { background: #2ecc71; }
+        
+        /* Commentary */
+        #commentary { height: 60px; font-style: italic; color: #aaa; overflow-y: auto; font-size: 0.9rem; margin: 10px 0; border-left: 3px solid var(--accent); padding-left: 10px; }
+        
+        /* Table */
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th, td { padding: 8px; border-bottom: 1px solid #444; text-align: left; }
+        input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; border: none; background: #444; color: white; }
+        button { background: #2980b9; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <!-- SETUP SCREEN -->
-    <div id="setup-screen">
-        <h1>🏏 Career Start</h1>
-        <input type="text" id="pName" placeholder="Enter Your Name">
+<div class="container">
+    <!-- SETUP -->
+    <div id="setup-screen" class="card">
+        <h2>🏏 Create Your Pro</h2>
+        <input type="text" id="pName" placeholder="Player Name">
         <select id="pTeam">
-            <option value="Warriors">Warriors</option>
-            <option value="Titans">Titans</option>
-            <option value="Kings">Kings</option>
-            <option value="Strikers">Strikers</option>
-            <option value="Blasters">Blasters</option>
-            <option value="Shadows">Shadows</option>
+            <option value="Mumbai Hawks">Mumbai Hawks</option>
+            <option value="Delhi Dragons">Delhi Dragons</option>
+            <option value="Bangalore Bolts">Bangalore Bolts</option>
+            <option value="Chennai Cobras">Chennai Cobras</option>
+            <option value="Kolkata Knights">Kolkata Knights</option>
+            <option value="Punjab Panthers">Punjab Panthers</option>
         </select>
-        <select id="pRole">
-            <option value="Batsman">Batsman</option>
-            <option value="All-Rounder">All-Rounder</option>
-            <option value="Bowler">Bowler</option>
+        <label>Batting Position:</label>
+        <select id="pPos">
+            <option value="1">Opener (#1)</option>
+            <option value="3">Top Order (#3)</option>
+            <option value="5">Middle Order (#5)</option>
+            <option value="7">Finisher (#7)</option>
         </select>
-        <button onclick="initGame()">Create Player</button>
+        <button onclick="initGame()">Start Career</button>
     </div>
 
-    <!-- MATCH SCREEN -->
-    <div id="match-screen" class="hidden">
-        <div class="stats-grid">
+    <!-- MATCH INTERFACE -->
+    <div id="match-screen" class="card hidden">
+        <div class="stats-bar">
             <div>Div: <span id="stat-div">3</span></div>
+            <div>Season Runs: <span id="stat-runs">0</span></div>
             <div>Match: <span id="stat-match">1</span>/10</div>
-            <div>Runs: <span id="stat-runs">0</span></div>
-            <div>Wickets: <span id="stat-wicks">0</span></div>
         </div>
-
-        <h2 id="match-info">Toss...</h2>
-        <div id="score-board" style="font-size: 1.8rem; margin: 15px 0; color: #f1c40f;">0 - 0 (0.0)</div>
-        <div id="log">The bowler is running in...</div>
-
-        <div class="tile-grid">
-            <div class="tile" onclick="playTurn()">?</div>
-            <div class="tile" onclick="playTurn()">?</div>
-            <div class="tile" onclick="playTurn()">?</div>
-            <div class="tile" onclick="playTurn()">?</div>
+        <hr>
+        <div class="match-header" id="match-vs">TEAM vs OPP</div>
+        <div id="score-main" style="font-size: 2rem;">0/0 (0.0)</div>
+        <div id="commentary">The toss is complete. Get ready!</div>
+        
+        <div class="tile-grid" id="tiles">
+            <div class="tile" onclick="handleShot()">?</div>
+            <div class="tile" onclick="handleShot()">?</div>
+            <div class="tile" onclick="handleShot()">?</div>
+            <div class="tile" onclick="handleShot()">?</div>
         </div>
+    </div>
+
+    <!-- POINTS TABLE -->
+    <div id="table-screen" class="card hidden">
+        <h3>📊 Points Table (Div <span id="table-div">3</span>)</h3>
+        <table id="points-table">
+            <thead><tr><th>Team</th><th>P</th><th>W</th><th>Pts</th></tr></thead>
+            <tbody id="table-body"></tbody>
+        </table>
+        <button onclick="nextMatch()">Next Match</button>
     </div>
 </div>
 
 <script>
-    let player = { name: "", role: "", div: 3, seasonRuns: 0, seasonWicks: 0, matchesPlayed: 0 };
-    let match = { runs: 0, balls: 0, wickets: 0, teamScore: 0, isPlayerActive: false };
+    let player = { name: "", team: "", pos: 1, div: 3, seasonRuns: 0, matches: 0 };
+    let match = { currentOpp: "", teamRuns: 0, teamWicks: 0, balls: 0, playerRuns: 0, isOut: false };
+    const teams = ["Mumbai Hawks", "Delhi Dragons", "Bangalore Bolts", "Chennai Cobras", "Kolkata Knights", "Punjab Panthers"];
+    let standings = teams.map(t => ({ name: t, p: 0, w: 0, pts: 0 }));
 
     function initGame() {
-        player.name = document.getElementById('pName').value || "Rookie";
-        player.role = document.getElementById('pRole').value;
+        player.name = document.getElementById('pName').value || "Player";
+        player.team = document.getElementById('pTeam').value;
+        player.pos = parseInt(document.getElementById('pPos').value);
+        
         document.getElementById('setup-screen').classList.add('hidden');
         document.getElementById('match-screen').classList.remove('hidden');
-        startNewMatch();
+        startMatch();
     }
 
-    function startNewMatch() {
-        match.runs = 0; match.balls = 0; match.wickets = 0;
-        match.teamScore = Math.floor(Math.random() * 100) + 50; // Simulated score before player
-        updateUI("New Match Starts!");
+    function startMatch() {
+        match.isOut = false;
+        match.playerRuns = 0;
+        match.balls = 0;
+        
+        // Pick Opponent
+        let others = teams.filter(t => t !== player.team);
+        match.currentOpp = others[Math.floor(Math.random() * others.length)];
+        document.getElementById('match-vs').innerText = `${player.team} vs ${match.currentOpp}`;
+        
+        // Simulate score before player comes in
+        // Lower position = more runs/wickets already happened
+        match.teamWicks = player.pos - 1;
+        match.teamRuns = Math.floor(Math.random() * (player.pos * 30));
+        match.balls = Math.floor(Math.random() * (player.pos * 18));
+        
+        updateUI(`You walk out to bat at position ${player.pos}.`);
     }
 
-    function playTurn() {
+    function handleShot() {
+        if (match.isOut || match.balls >= 120) return;
+
         let rng = Math.random();
-        let event = "";
-
-        if (rng < 0.20) { // 20% Dismissal Probability
-            const outs = ["Bowled!", "Caught!", "LBW!", "Stumped!"];
-            event = outs[Math.floor(Math.random() * outs.length)];
-            endInnings(event);
+        let comms = "";
+        
+        if (rng < 0.20) {
+            match.isOut = true;
+            match.teamWicks++;
+            comms = "OUT! That's a huge blow for " + player.team;
+            setTimeout(endMatch, 1500);
         } else {
-            const runOptions = [1, 2, 3, 4, 6];
-            let runs = runOptions[Math.floor(Math.random() * runOptions.length)];
-            match.runs += runs;
+            let runs = [0, 1, 2, 4, 6][Math.floor(Math.random() * 5)];
+            match.playerRuns += runs;
+            match.teamRuns += runs;
             player.seasonRuns += runs;
             match.balls++;
-            event = "You scored " + runs + " runs!";
-            
-            if (match.balls >= 120) endInnings("20 Overs Completed!");
+            comms = runs === 6 ? "SIX! Over the ropes!" : (runs === 4 ? "FOUR! Beautifully timed." : `He takes ${runs}.`);
         }
 
-        updateUI(event);
+        if (match.balls >= 120) {
+            comms = "Innings over! 20 overs completed.";
+            setTimeout(endMatch, 1500);
+        }
+
+        updateUI(comms);
     }
 
-    function endInnings(reason) {
-        alert(reason + "\nInnings Score: " + match.runs);
-        player.matchesPlayed++;
+    function endMatch() {
+        player.matches++;
+        // Simple win/loss logic for standings
+        standings.find(t => t.name === player.team).p++;
+        if (Math.random() > 0.5) {
+            standings.find(t => t.name === player.team).w++;
+            standings.find(t => t.name === player.team).pts += 2;
+        }
+
+        alert(`Match Finished! You scored ${match.playerRuns}. Total season runs: ${player.seasonRuns}`);
         
-        if (player.matchesPlayed >= 10) {
+        document.getElementById('match-screen').classList.add('hidden');
+        document.getElementById('table-screen').classList.remove('hidden');
+        renderTable();
+    }
+
+    function renderTable() {
+        let tbody = document.getElementById('table-body');
+        tbody.innerHTML = "";
+        standings.sort((a,b) => b.pts - a.pts).forEach(t => {
+            tbody.innerHTML += `<tr><td>${t.name}</td><td>${t.p}</td><td>${t.w}</td><td>${t.pts}</td></tr>`;
+        });
+        document.getElementById('table-div').innerText = player.div;
+    }
+
+    function nextMatch() {
+        if (player.matches >= 10) {
             checkPromotion();
         } else {
-            startNewMatch();
+            document.getElementById('table-screen').classList.add('hidden');
+            document.getElementById('match-screen').classList.remove('hidden');
+            startMatch();
         }
     }
 
     function checkPromotion() {
-        let promoted = false;
-        if (player.role === "Batsman" && player.seasonRuns >= 300) promoted = true;
-        if (player.role === "All-Rounder" && player.seasonRuns >= 200) promoted = true; // Simplified for demo
-        if (player.role === "Bowler") promoted = true; // Mock logic
-
-        if (promoted && player.div > 1) {
+        if (player.seasonRuns >= 300 && player.div > 1) {
             player.div--;
-            alert("CONGRATS! You are promoted to Division " + player.div);
+            alert("PROMOTED TO DIVISION " + player.div);
         } else {
-            alert("Season Over. You stay in Division " + player.div);
+            alert("Season Over. Targets not met for promotion.");
         }
-        
-        // Reset Season
-        player.matchesPlayed = 0; player.seasonRuns = 0;
-        startNewMatch();
+        player.matches = 0; player.seasonRuns = 0;
+        nextMatch();
     }
 
     function updateUI(msg) {
-        let overs = Math.floor(match.balls / 6) + "." + (match.balls % 6);
-        document.getElementById('score-board').innerText = `${match.runs} runs (${overs} ov)`;
+        let ov = Math.floor(match.balls / 6) + "." + (match.balls % 6);
+        document.getElementById('score-main').innerText = `${match.teamRuns}/${match.teamWicks} (${ov})`;
+        document.getElementById('commentary').innerText = msg;
         document.getElementById('stat-runs').innerText = player.seasonRuns;
-        document.getElementById('stat-div').innerText = player.div;
-        document.getElementById('stat-match').innerText = player.matchesPlayed + 1;
-        document.getElementById('log').innerText = msg;
+        document.getElementById('stat-match').innerText = player.matches + 1;
     }
 </script>
 </body>
