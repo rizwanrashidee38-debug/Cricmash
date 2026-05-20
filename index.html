@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Pro Simulator</title>
+    <style>
+        :root { --primary: #2ecc71; --secondary: #27ae60; --dark: #2c3e50; --light: #ecf0f1; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--dark); color: var(--light); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        #game-container { background: #34495e; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); width: 95%; max-width: 500px; text-align: center; }
+        .hidden { display: none; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; }
+        .tile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .tile { height: 100px; background: var(--primary); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; transition: 0.2s; border-bottom: 5px solid var(--secondary); }
+        .tile:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        .tile:active { transform: translateY(2px); border-bottom: 0; }
+        button { background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 10px; }
+        input, select { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; box-sizing: border-box; }
+        #log { font-style: italic; color: #bdc3c7; height: 40px; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- SETUP SCREEN -->
+    <div id="setup-screen">
+        <h1>🏏 Career Start</h1>
+        <input type="text" id="pName" placeholder="Enter Your Name">
+        <select id="pTeam">
+            <option value="Warriors">Warriors</option>
+            <option value="Titans">Titans</option>
+            <option value="Kings">Kings</option>
+            <option value="Strikers">Strikers</option>
+            <option value="Blasters">Blasters</option>
+            <option value="Shadows">Shadows</option>
+        </select>
+        <select id="pRole">
+            <option value="Batsman">Batsman</option>
+            <option value="All-Rounder">All-Rounder</option>
+            <option value="Bowler">Bowler</option>
+        </select>
+        <button onclick="initGame()">Create Player</button>
+    </div>
+
+    <!-- MATCH SCREEN -->
+    <div id="match-screen" class="hidden">
+        <div class="stats-grid">
+            <div>Div: <span id="stat-div">3</span></div>
+            <div>Match: <span id="stat-match">1</span>/10</div>
+            <div>Runs: <span id="stat-runs">0</span></div>
+            <div>Wickets: <span id="stat-wicks">0</span></div>
+        </div>
+
+        <h2 id="match-info">Toss...</h2>
+        <div id="score-board" style="font-size: 1.8rem; margin: 15px 0; color: #f1c40f;">0 - 0 (0.0)</div>
+        <div id="log">The bowler is running in...</div>
+
+        <div class="tile-grid">
+            <div class="tile" onclick="playTurn()">?</div>
+            <div class="tile" onclick="playTurn()">?</div>
+            <div class="tile" onclick="playTurn()">?</div>
+            <div class="tile" onclick="playTurn()">?</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let player = { name: "", role: "", div: 3, seasonRuns: 0, seasonWicks: 0, matchesPlayed: 0 };
+    let match = { runs: 0, balls: 0, wickets: 0, teamScore: 0, isPlayerActive: false };
+
+    function initGame() {
+        player.name = document.getElementById('pName').value || "Rookie";
+        player.role = document.getElementById('pRole').value;
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('match-screen').classList.remove('hidden');
+        startNewMatch();
+    }
+
+    function startNewMatch() {
+        match.runs = 0; match.balls = 0; match.wickets = 0;
+        match.teamScore = Math.floor(Math.random() * 100) + 50; // Simulated score before player
+        updateUI("New Match Starts!");
+    }
+
+    function playTurn() {
+        let rng = Math.random();
+        let event = "";
+
+        if (rng < 0.20) { // 20% Dismissal Probability
+            const outs = ["Bowled!", "Caught!", "LBW!", "Stumped!"];
+            event = outs[Math.floor(Math.random() * outs.length)];
+            endInnings(event);
+        } else {
+            const runOptions = [1, 2, 3, 4, 6];
+            let runs = runOptions[Math.floor(Math.random() * runOptions.length)];
+            match.runs += runs;
+            player.seasonRuns += runs;
+            match.balls++;
+            event = "You scored " + runs + " runs!";
+            
+            if (match.balls >= 120) endInnings("20 Overs Completed!");
+        }
+
+        updateUI(event);
+    }
+
+    function endInnings(reason) {
+        alert(reason + "\nInnings Score: " + match.runs);
+        player.matchesPlayed++;
+        
+        if (player.matchesPlayed >= 10) {
+            checkPromotion();
+        } else {
+            startNewMatch();
+        }
+    }
+
+    function checkPromotion() {
+        let promoted = false;
+        if (player.role === "Batsman" && player.seasonRuns >= 300) promoted = true;
+        if (player.role === "All-Rounder" && player.seasonRuns >= 200) promoted = true; // Simplified for demo
+        if (player.role === "Bowler") promoted = true; // Mock logic
+
+        if (promoted && player.div > 1) {
+            player.div--;
+            alert("CONGRATS! You are promoted to Division " + player.div);
+        } else {
+            alert("Season Over. You stay in Division " + player.div);
+        }
+        
+        // Reset Season
+        player.matchesPlayed = 0; player.seasonRuns = 0;
+        startNewMatch();
+    }
+
+    function updateUI(msg) {
+        let overs = Math.floor(match.balls / 6) + "." + (match.balls % 6);
+        document.getElementById('score-board').innerText = `${match.runs} runs (${overs} ov)`;
+        document.getElementById('stat-runs').innerText = player.seasonRuns;
+        document.getElementById('stat-div').innerText = player.div;
+        document.getElementById('stat-match').innerText = player.matchesPlayed + 1;
+        document.getElementById('log').innerText = msg;
+    }
+</script>
+</body>
+</html>
